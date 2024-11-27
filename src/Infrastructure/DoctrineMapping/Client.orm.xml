@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://raw.github.com/doctrine/doctrine2/master/doctrine-mapping.xsd">
+
+    <entity name="App\Domain\Client\Entity\Client" table="clients">
+        <id name="id" type="clientid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="firstName" type="string" column="first_name" length="100"/>
+        <field name="lastName" type="string" column="last_name" length="100"/>
+        <field name="age" type="integer" column="age"/>
+        <field name="ssn" type="string" column="ssn" length="11" unique="true"/>
+        <field name="monthlyIncome" type="float" column="monthly_income"/>
+        <field name="email" type="string" column="email" length="255" unique="true"/>
+        <field name="phone" type="string" column="phone" length="20"/>
+        <field name="createdAt" type="datetime_immutable" column="created_at"/>
+        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="true"/>
+
+        <field name="address" type="address" column="address" />
+        <field name="ficoScore" type="ficoscore" column="fico_score" />
+
+    </entity>
+
+</doctrine-mapping>
