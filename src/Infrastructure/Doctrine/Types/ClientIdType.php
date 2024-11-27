@@ -14,7 +14,7 @@ class ClientIdType extends AggregateRootType
         return new ClientId($uuid);
     }
 
-    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    public function convertToDatabaseValue($value, AbstractPlatform $platform): ?string
     {
         if ($value instanceof ClientId) {
             return $value->getValue();

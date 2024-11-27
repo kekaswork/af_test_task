@@ -14,7 +14,7 @@ class LoanIdType extends AggregateRootType
         return new LoanId($uuid);
     }
 
-    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    public function convertToDatabaseValue($value, AbstractPlatform $platform): ?string
     {
         if ($value instanceof LoanId) {
             return $value->getValue();

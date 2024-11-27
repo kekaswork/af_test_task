@@ -58,7 +58,7 @@ readonly class UpdateClientService
         $client
             ->setFirstName($clientDto->firstName)
             ->setLastName($clientDto->lastName)
-            ->setAge($clientDto->age)
+            ->setDateOfBirth(new \DateTimeImmutable($clientDto->dateOfBirth))
             ->setSsn($clientDto->ssn)
             ->setAddress($address)
             ->setFicoScore($ficoScore)

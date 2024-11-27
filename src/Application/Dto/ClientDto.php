@@ -3,6 +3,7 @@
 namespace App\Application\Dto;
 
 use App\Domain\Client\ValueObject\Address;
+use DateTimeImmutable;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -21,27 +22,23 @@ class ClientDto
     public string $lastName;
 
     #[Assert\NotBlank]
-    #[Assert\GreaterThan(0)]
-    #[SerializedName('age')]
-    public int $age;
+    #[Assert\Date]
+    #[SerializedName('date_of_birth')]
+    public string $dateOfBirth;
 
-    #[Assert\NotBlank]
     #[Assert\NotBlank]
     #[Assert\Regex(pattern: '/^\d{3}-\d{2}-\d{4}$/', message: 'The SSN must be in the format XXX-XX-XXXX')]
     #[SerializedName('ssn')]
     public string $ssn;
 
     #[Assert\NotBlank]
-    #[Assert\NotBlank]
     #[SerializedName('street')]
     public string $street;
 
     #[Assert\NotBlank]
-    #[Assert\NotBlank]
     #[SerializedName('city')]
     public string $city;
 
-    #[Assert\NotBlank]
     #[Assert\NotBlank]
     #[Assert\Choice(callback: [
         Address::class,
@@ -50,7 +47,6 @@ class ClientDto
     #[SerializedName('state')]
     public string $state;
 
-    #[Assert\NotBlank]
     #[Assert\NotBlank]
     #[Assert\Regex(pattern: '/^\d{5}(-\d{4})?$/', message: 'The zip code must be in the format 12345 or 12345-6789')]
     #[SerializedName('zip')]
@@ -77,10 +73,10 @@ class ClientDto
     public float $monthlyIncome;
 
     #[Groups(['client_read'])]
-    public ?\DateTimeImmutable $createdAt = null;
+    public ?DateTimeImmutable $createdAt = null;
 
     #[Groups(['client_read'])]
-    public ?\DateTimeImmutable $updatedAt = null;
+    public ?DateTimeImmutable $updatedAt = null;
 
     public function __construct()
     {

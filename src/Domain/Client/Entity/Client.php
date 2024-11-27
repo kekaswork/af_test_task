@@ -13,7 +13,7 @@ class Client
         private ClientId $id,
         private string $firstName,
         private string $lastName,
-        private int $age,
+        private DateTimeImmutable $dateOfBirth,
         private string $ssn,
         private Address $address,
         private FicoScore $ficoScore,
@@ -54,14 +54,14 @@ class Client
         return $this->lastName;
     }
 
-    public function getAge(): int
+    public function getDateOfBirth(): DateTimeImmutable
     {
-        return $this->age;
+        return $this->dateOfBirth;
     }
 
-    public function setAge(int $age): self
+    public function setDateOfBirth(DateTimeImmutable $dateOfBirth): self
     {
-        $this->age = $age;
+        $this->dateOfBirth = $dateOfBirth;
 
         return $this;
     }
@@ -100,7 +100,7 @@ class Client
         ClientId $id,
         string $firstName,
         string $lastName,
-        int $age,
+        DateTimeImmutable $dateOfBirth,
         string $ssn,
         Address $address,
         FicoScore $ficoScore,
@@ -114,7 +114,7 @@ class Client
             id: $id,
             firstName: $firstName,
             lastName: $lastName,
-            age: $age,
+            dateOfBirth: $dateOfBirth,
             ssn: $ssn,
             address: $address,
             ficoScore: $ficoScore,
@@ -198,4 +198,11 @@ class Client
     }
 
 
+    public function getAge(): int
+    {
+        $currentDate = new \DateTimeImmutable();
+        $interval = $currentDate->diff($this->dateOfBirth);
+
+        return $interval->y;
+    }
 }

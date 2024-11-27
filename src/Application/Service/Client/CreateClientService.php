@@ -46,7 +46,7 @@ readonly class CreateClientService
             id: ClientId::generate(),
             firstName: $clientDto->firstName,
             lastName: $clientDto->lastName,
-            age: $clientDto->age,
+            dateOfBirth: new \DateTimeImmutable($clientDto->dateOfBirth),
             ssn: $clientDto->ssn,
             address: $address,
             ficoScore: $ficoScore,

@@ -10,7 +10,7 @@
         </id>
         <field name="firstName" type="string" column="first_name" length="100"/>
         <field name="lastName" type="string" column="last_name" length="100"/>
-        <field name="age" type="integer" column="age"/>
+        <field name="dateOfBirth" type="date_immutable" column="date_of_birth"/>
         <field name="ssn" type="string" column="ssn" length="11" unique="true"/>
         <field name="monthlyIncome" type="float" column="monthly_income"/>
         <field name="email" type="string" column="email" length="255" unique="true"/>
