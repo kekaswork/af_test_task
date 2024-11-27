@@ -3,8 +3,9 @@
 namespace App\Application\Service\Client;
 
 use App\Domain\Client\Entity\Client;
+use App\Domain\Client\Service\LoanEligibilityServiceInterface;
 
-class CheckCreditEligibilityService
+class LoanEligibilityService implements LoanEligibilityServiceInterface
 {
     private const int MIN_FICO_SCORE = 500;
     private const int MIN_INCOME = 1000;

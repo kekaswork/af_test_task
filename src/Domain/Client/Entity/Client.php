@@ -23,8 +23,6 @@ class Client
         private DateTimeImmutable $createdAt,
         private ?DateTimeImmutable $updatedAt,
     ) {
-        $this->createdAt = new DateTimeImmutable();
-        $this->updatedAt = null;
     }
 
     public function getId(): ClientId
@@ -111,8 +109,7 @@ class Client
         float $monthlyIncome,
         ?DateTimeImmutable $createdAt = new \DateTimeImmutable('now'),
         ?DateTimeImmutable $updatedAt = null,
-    ): self
-    {
+    ): self {
         return new self(
             id: $id,
             firstName: $firstName,

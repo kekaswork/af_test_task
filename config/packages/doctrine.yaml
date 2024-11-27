@@ -12,6 +12,7 @@ doctrine:
         types:
             address: App\Infrastructure\Doctrine\Types\AddressType
             clientid: App\Infrastructure\Doctrine\Types\ClientIdType
+            loanid: App\Infrastructure\Doctrine\Types\LoanIdType
             ficoscore: App\Infrastructure\Doctrine\Types\FicoScoreType
     orm:
         auto_generate_proxy_classes: true
@@ -29,6 +30,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Infrastructure/DoctrineMapping'
                 prefix: 'App\Domain\Client\Entity'
                 alias: Client
+            Loan:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Infrastructure/DoctrineMapping'
+                prefix: 'App\Domain\Client\Entity'
+                alias: Loan
 
 when@test:
     doctrine:

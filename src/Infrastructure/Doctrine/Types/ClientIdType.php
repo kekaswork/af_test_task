@@ -3,16 +3,15 @@
 namespace App\Infrastructure\Doctrine\Types;
 
 use App\Domain\Client\ValueObject\ClientId;
-use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
-class ClientIdType extends Type
+class ClientIdType extends AggregateRootType
 {
-    const string CLIENTID = 'clientid';
+    const string NAME = 'clientid';
 
-    public function convertToPHPValue($value, AbstractPlatform $platform): ClientId
+    public function convertToPHPValue($uuid, AbstractPlatform $platform): ClientId
     {
-        return new ClientId($value);
+        return new ClientId($uuid);
     }
 
     public function convertToDatabaseValue($value, AbstractPlatform $platform)
@@ -22,15 +21,5 @@ class ClientIdType extends Type
         }
 
         return null;
-    }
-
-    public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
-    {
-        return "VARCHAR(255)";
-    }
-
-    public function getName(): string
-    {
-        return self::CLIENTID;
     }
 }
