@@ -28,8 +28,7 @@ class ClientController extends AbstractController
     #[Route('', name: 'Create new client', methods: ['POST'], format: 'json')]
     public function createClient(
         #[MapRequestPayload] ClientDto $clientDto
-    ): JsonResponse
-    {
+    ): JsonResponse {
         try {
             $clientId = $this->createClientService->execute($clientDto);
 
@@ -54,8 +53,7 @@ class ClientController extends AbstractController
     public function updateClient(
         string $id,
         #[MapRequestPayload] ClientDto $clientDto,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         try {
             $clientId = $this->updateClientService->execute(
                 $clientDto->setId($id),

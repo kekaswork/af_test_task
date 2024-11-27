@@ -7,7 +7,7 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 class ClientIdType extends AggregateRootType
 {
-    const string NAME = 'clientid';
+    public const string NAME = 'clientid';
 
     public function convertToPHPValue($uuid, AbstractPlatform $platform): ClientId
     {

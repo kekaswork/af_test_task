@@ -24,7 +24,10 @@ class AddressType extends Type
         $data = json_decode($value, true);
 
         return new Address(
-            $data['street'] ?? '', $data['city'] ?? '', $data['state'] ?? '', $data['zip'] ?? ''
+            $data['street'] ?? '',
+            $data['city'] ?? '',
+            $data['state'] ?? '',
+            $data['zip'] ?? ''
         );
     }
 

@@ -3,6 +3,7 @@
 namespace App\Application\Service\Client;
 
 use App\Domain\Client\Entity\Client;
+
 //use App\Domain\Client\Notification\EmailNotification;
 //use App\Domain\Client\Notification\SmsNotification;
 

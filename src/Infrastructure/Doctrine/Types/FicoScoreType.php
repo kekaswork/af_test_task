@@ -8,7 +8,7 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 class FicoScoreType extends Type
 {
-    const string FICOSCORE = 'ficoscore';
+    public const string FICOSCORE = 'ficoscore';
 
     public function convertToPHPValue($value, AbstractPlatform $platform): FicoScore
     {

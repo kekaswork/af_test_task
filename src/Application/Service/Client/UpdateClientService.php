@@ -15,8 +15,8 @@ readonly class UpdateClientService
 {
     public function __construct(
         private ClientRepositoryInterface $clientRepository,
-    )
-    {}
+    ) {
+    }
 
     /**
      * @throws ClientNotFoundException
@@ -24,8 +24,7 @@ readonly class UpdateClientService
      */
     public function execute(
         ClientDto $clientDto,
-    ): string
-    {
+    ): string {
         // Validating ID
         $clientId = ClientId::fromString($clientDto->getId());
         $client = $this->clientRepository->findById($clientId);

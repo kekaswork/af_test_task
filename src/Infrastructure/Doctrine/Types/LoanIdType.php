@@ -7,7 +7,7 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 class LoanIdType extends AggregateRootType
 {
-    const string NAME = 'loanid';
+    public const string NAME = 'loanid';
 
     public function convertToPHPValue($uuid, AbstractPlatform $platform): LoanId
     {
