@@ -2,7 +2,6 @@
 
 namespace App\Domain\Client\Entity;
 
-use App\Domain\Client\ValueObject\ClientId;
 use App\Domain\Client\ValueObject\LoanId;
 use DateTimeImmutable;
 
@@ -10,7 +9,7 @@ class Loan
 {
     private function __construct(
         private LoanId $id,
-        private ClientId $clientId,
+        private Client $client,
         private string $name,
         private int $term,
         private float $interest,
@@ -32,14 +31,14 @@ class Loan
         return $this;
     }
 
-    public function getClientId(): ClientId
+    public function getClient(): Client
     {
-        return $this->clientId;
+        return $this->client;
     }
 
-    public function setClientId(ClientId $clientId): self
+    public function setClient(Client $client): self
     {
-        $this->clientId = $clientId;
+        $this->client = $client;
 
         return $this;
     }
@@ -114,5 +113,27 @@ class Loan
         $this->updatedAt = $updatedAt;
 
         return $this;
+    }
+
+    public static function create(
+        LoanId $loanId,
+        Client $client,
+        string $name,
+        int $term,
+        float $interest,
+        float $sum,
+        ?DateTimeImmutable $createdAt = new \DateTimeImmutable('now'),
+        ?DateTimeImmutable $updatedAt = null,
+    ): self {
+        return new self(
+            id: $loanId,
+            client: $client,
+            name: $name,
+            term: $term,
+            interest: $interest,
+            sum: $sum,
+            createdAt: $createdAt,
+            updatedAt: $updatedAt,
+        );
     }
 }

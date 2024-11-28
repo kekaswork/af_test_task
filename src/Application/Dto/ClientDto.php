@@ -68,7 +68,7 @@ class ClientDto
     public string $phone;
 
     #[Assert\NotBlank]
-    #[Assert\GreaterThan(-1)]
+    #[Assert\GreaterThanOrEqual(0)]
     #[SerializedName('monthly_income')]
     public float $monthlyIncome;
 

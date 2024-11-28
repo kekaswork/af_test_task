@@ -44,16 +44,6 @@ class LoanEligibilityService implements LoanEligibilityServiceInterface
         return true;
     }
 
-    public function adjustInterestRate(Client $client, float $baseRate): float
-    {
-        // Update the interest rate for clients from CA.
-        if ($client->getAddress()->getState() === 'CA') {
-            return $baseRate + 11.49;
-        }
-
-        return $baseRate;
-    }
-
     private function randomDecision(): bool
     {
         return rand(0, 1) === 1;

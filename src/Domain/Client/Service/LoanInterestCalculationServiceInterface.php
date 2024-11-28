@@ -2,9 +2,9 @@
 
 namespace App\Domain\Client\Service;
 
-use App\Domain\Client\Entity\Loan;
+use App\Domain\Client\Entity\Client;
 
 interface LoanInterestCalculationServiceInterface
 {
-    public function getInterest(Loan $loan): float;
+    public function getInterest(Client $client): float;
 }

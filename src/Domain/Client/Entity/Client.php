@@ -3,6 +3,7 @@
 namespace App\Domain\Client\Entity;
 
 use App\Domain\Client\Service\LoanEligibilityServiceInterface;
+use App\Domain\Client\Service\LoanInterestCalculationServiceInterface;
 use App\Domain\Client\ValueObject\Address;
 use App\Domain\Client\ValueObject\ClientId;
 use App\Domain\Client\ValueObject\FicoScore;
@@ -210,5 +211,10 @@ class Client
     public function isEligibleForLoan(LoanEligibilityServiceInterface $eligibilityService): bool
     {
         return $eligibilityService->isEligible($this);
+    }
+
+    public function getInterestRate(LoanInterestCalculationServiceInterface $loanInterestCalculationService): float
+    {
+        return $loanInterestCalculationService->getInterest($this);
     }
 }

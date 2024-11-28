@@ -10,7 +10,7 @@
         </id>
         <field name="name" type="string" column="name" length="255"/>
 
-        <many-to-one field="clientId" target-entity="App\Domain\Client\Entity\Client" inversed-by="loans">
+        <many-to-one field="client" target-entity="App\Domain\Client\Entity\Client" inversed-by="loans">
             <join-column name="client_id" referenced-column-name="id" nullable="false"/>
         </many-to-one>
 
