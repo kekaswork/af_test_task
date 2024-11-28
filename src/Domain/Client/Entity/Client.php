@@ -207,14 +207,4 @@ class Client
 
         return $interval->y;
     }
-
-    public function isEligibleForLoan(LoanEligibilityServiceInterface $eligibilityService): bool
-    {
-        return $eligibilityService->isEligible($this);
-    }
-
-    public function getInterestRate(LoanInterestCalculationServiceInterface $loanInterestCalculationService): float
-    {
-        return $loanInterestCalculationService->getInterest($this);
-    }
 }

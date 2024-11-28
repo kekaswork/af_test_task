@@ -3,6 +3,7 @@
 namespace App\Tests\Controller;
 
 use App\Application\Service\Client\CreateClientService;
+use App\Application\Service\Client\LoanEligibilityClientService;
 use App\Application\Service\Client\UpdateClientService;
 use App\Domain\Client\Repository\ClientRepositoryInterface;
 use App\Domain\Client\ValueObject\AggregateRootId;
@@ -18,6 +19,7 @@ class ClientControllerTest extends WebTestCase
     private static ClientRepositoryInterface $clientRepository;
     private CreateClientService $createClientService;
     private UpdateClientService $updateClientService;
+    private LoanEligibilityClientService $loanEligibilityClientService;
     private ClientController $controller;
     private static string $addedClientId = '';
 
@@ -28,7 +30,8 @@ class ClientControllerTest extends WebTestCase
         }
         $this->createClientService = new CreateClientService(self::$clientRepository);
         $this->updateClientService = new UpdateClientService(self::$clientRepository);
-        $this->controller = new ClientController($this->createClientService, $this->updateClientService);
+        $this->loanEligibilityClientService = new LoanEligibilityClientService(self::$clientRepository);
+        $this->controller = new ClientController($this->createClientService, $this->updateClientService, $this->loanEligibilityClientService);
     }
 
     public function testCreateClientSuccess()

@@ -19,6 +19,10 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+    App\Application\Service\Client\NotificationService:
+        arguments:
+            $emailNotificationService: '@App\Infrastructure\Service\EmailNotificationService'
+            $smsNotificationService: '@App\Infrastructure\Service\SmsNotificationService'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
