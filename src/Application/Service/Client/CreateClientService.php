@@ -4,58 +4,40 @@ namespace App\Application\Service\Client;
 
 use App\Application\Dto\ClientDto;
 use App\Domain\Client\Entity\Client;
-use App\Domain\Client\Exception\InvalidAddressException;
-use App\Domain\Client\Exception\InvalidFicoScoreException;
 use App\Domain\Client\ValueObject\ClientId;
-use App\Domain\Client\ValueObject\FicoScore;
-use App\Domain\Client\ValueObject\Address;
 use App\Domain\Client\Repository\ClientRepositoryInterface;
 use App\Domain\Client\Exception\ClientAlreadyExistsException;
-use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use InvalidArgumentException;
-use mysql_xdevapi\Exception;
 
+/**
+ * Service for creating a new client.
+ */
 class CreateClientService
 {
     public function __construct(
         private ClientRepositoryInterface $clientRepository,
+        private ClientDtoValidator $clientDtoValidator,
     ) {
     }
 
     /**
-     * @throws ClientAlreadyExistsException
+     * Executes the process of creating a new client.
+     *
+     * @param ClientDto $clientDto Data Transfer Object containing client information.
+     *
+     * @return string The ID of the newly created client.
+     *
+     * @throws ClientAlreadyExistsException If the email or SSN already exists.
+     * @throws InvalidArgumentException If validation of any client property fails.
      */
     public function execute(
         ClientDto $clientDto,
     ): string {
-
-        // Check if the email or SSN already exists.
-        if ($this->clientRepository->findByEmail($clientDto->email) !== null) {
-            throw new ClientAlreadyExistsException("Client with email {$clientDto->email} already exists.");
-        }
-        if ($this->clientRepository->findBySsn($clientDto->ssn) !== null) {
-            throw new ClientAlreadyExistsException("Client with SSN {$clientDto->ssn} already exists.");
-        }
-
-        try {
-            $address = new Address(
-                street: $clientDto->street,
-                city: $clientDto->city,
-                state: $clientDto->state,
-                zip: $clientDto->zip
-            );
-            $ficoScore = new FicoScore($clientDto->ficoScore);
-        } catch (InvalidAddressException $e) {
-            throw new InvalidArgumentException('invalid address');
-        } catch (InvalidFicoScoreException $e) {
-            throw new InvalidArgumentException('invalid FICO score');
-        }
-        try {
-            $dateOfBirth = new \DateTimeImmutable($clientDto->dateOfBirth);
-        } catch (\Exception $e) {
-            throw new InvalidArgumentException('invalid date of birth score');
-        }
-
+        $this->clientDtoValidator->validateUniqueEmail($clientDto->email);
+        $this->clientDtoValidator->validateUniqueSsn($clientDto->ssn);
+        $address = $this->clientDtoValidator->validateAddress($clientDto);
+        $ficoScore = $this->clientDtoValidator->validateFicoScore($clientDto->ficoScore);
+        $dateOfBirth = $this->clientDtoValidator->validateDateOfBirth($clientDto->dateOfBirth);
 
         // Creating new client.
         $client = Client::create(

@@ -38,7 +38,7 @@ class NotificationService
      */
     public function notifyLoanDeclined(Client $client): void
     {
-        $message = 'Unfortunately, your loan application has been declined.';
+        $message = $this->buildDeclineMessage();
 
         // Notify by both Email and SMS (per technical task description).
         $this->emailNotificationService->notify($client, $message);
@@ -60,5 +60,15 @@ class NotificationService
             $loan->getSum(),
             $loan->getInterest()
         );
+    }
+
+    /**
+     * Builds a notification message for a declined loan application.
+     *
+     * @return string The formatted decline message.
+     */
+    private function buildDeclineMessage(): string
+    {
+        return "Unfortunately, your loan application has been declined. For more details, please contact our support team.";
     }
 }

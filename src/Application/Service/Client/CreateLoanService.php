@@ -3,6 +3,7 @@
 namespace App\Application\Service\Client;
 
 use App\Application\Dto\LoanDto;
+use App\Domain\Client\Entity\Client;
 use App\Domain\Client\Entity\Loan;
 use App\Domain\Client\Exception\ClientNotFoundException;
 use App\Domain\Client\Repository\ClientRepositoryInterface;
@@ -11,6 +12,9 @@ use App\Domain\Client\Service\LoanManagerService;
 use App\Domain\Client\ValueObject\ClientId;
 use App\Domain\Client\ValueObject\LoanId;
 
+/**
+ * Service for creating a loan for a client.
+ */
 class CreateLoanService
 {
     public function __construct(
@@ -21,20 +25,24 @@ class CreateLoanService
     }
 
     /**
-     * @throws ClientNotFoundException
+     * Creates a loan for a client if eligible and sends notifications.
+     *
+     * @param LoanDto $loanDto Data Transfer Object containing loan information.
+     *
+     * @return array The loan approval status, interest rate (if approved), and loan ID.
+     *
+     * @throws ClientNotFoundException If the client cannot be found by the provided ID.
      */
     public function execute(
         LoanDto $loanDto,
     ): array {
         $clientId = ClientId::fromString($loanDto->clientId);
         $client = $this->clientRepository->findById($clientId);
-        if (! $client) {
+        if (!$client instanceof Client) {
             throw new ClientNotFoundException('Client not found.');
         }
 
         $loanManagerService = new LoanManagerService($client);
-
-        $isApproved = true;
         if (! $loanManagerService->isEligibleForLoan()) {
             // Sending notification.
             $this->notificationService->notifyLoanDeclined($client);

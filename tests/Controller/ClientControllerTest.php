@@ -2,6 +2,7 @@
 
 namespace App\Tests\Controller;
 
+use App\Application\Service\Client\ClientDtoValidator;
 use App\Application\Service\Client\CreateClientService;
 use App\Application\Service\Client\LoanEligibilityClientService;
 use App\Application\Service\Client\UpdateClientService;
@@ -28,8 +29,9 @@ class ClientControllerTest extends WebTestCase
         if (! isset(self::$clientRepository)) {
             self::$clientRepository = new MockClientRepository();
         }
-        $this->createClientService = new CreateClientService(self::$clientRepository);
-        $this->updateClientService = new UpdateClientService(self::$clientRepository);
+        $clientDtoValidator = new ClientDtoValidator(self::$clientRepository);
+        $this->createClientService = new CreateClientService(self::$clientRepository, $clientDtoValidator);
+        $this->updateClientService = new UpdateClientService(self::$clientRepository, $clientDtoValidator);
         $this->loanEligibilityClientService = new LoanEligibilityClientService(self::$clientRepository);
         $this->controller = new ClientController($this->createClientService, $this->updateClientService, $this->loanEligibilityClientService);
     }

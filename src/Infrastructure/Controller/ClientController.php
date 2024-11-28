@@ -85,7 +85,7 @@ class ClientController extends AbstractController
         } catch (\InvalidArgumentException $e) {
             $response = [
                 'status' => 'error',
-                'client_id' => 'Invalid request payload. Please check your input data.',
+                'client_id' => $e->getMessage(),
             ];
             $status = Response::HTTP_BAD_REQUEST;
         } catch (ClientAlreadyExistsException $e) {
@@ -125,7 +125,7 @@ class ClientController extends AbstractController
         } catch (\InvalidArgumentException $e) {
             $response = [
                 'status' => 'error',
-                'client_id' => 'Invalid request payload. Please check your input data.',
+                'client_id' => $e->getMessage(),
             ];
             $status = Response::HTTP_BAD_REQUEST;
         } catch (\Throwable $e) {
