@@ -2,7 +2,7 @@
 
 namespace App\Domain\Client\ValueObject;
 
-use App\Domain\Client\Exception\InvalidFICOScoreException;
+use App\Domain\Client\Exception\InvalidFicoScoreException;
 
 class FicoScore
 {
@@ -17,7 +17,7 @@ class FicoScore
     private function validate(int $score): void
     {
         if ($score < 0) {
-            throw new InvalidFICOScoreException(
+            throw new InvalidFicoScoreException(
                 "FICO score must be positive number. Provided: $score"
             );
         }

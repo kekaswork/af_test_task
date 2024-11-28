@@ -4,14 +4,18 @@ namespace App\Application\Service\Client;
 
 use App\Application\Dto\ClientDto;
 use App\Domain\Client\Entity\Client;
+use App\Domain\Client\Exception\InvalidAddressException;
+use App\Domain\Client\Exception\InvalidFicoScoreException;
 use App\Domain\Client\ValueObject\ClientId;
 use App\Domain\Client\ValueObject\FicoScore;
 use App\Domain\Client\ValueObject\Address;
 use App\Domain\Client\Repository\ClientRepositoryInterface;
 use App\Domain\Client\Exception\ClientAlreadyExistsException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use InvalidArgumentException;
+use mysql_xdevapi\Exception;
 
-readonly class CreateClientService
+class CreateClientService
 {
     public function __construct(
         private ClientRepositoryInterface $clientRepository,
@@ -33,20 +37,32 @@ readonly class CreateClientService
             throw new ClientAlreadyExistsException("Client with SSN {$clientDto->ssn} already exists.");
         }
 
-        $address = new Address(
-            street: $clientDto->street,
-            city: $clientDto->city,
-            state: $clientDto->state,
-            zip: $clientDto->zip
-        );
-        $ficoScore = new FicoScore($clientDto->ficoScore);
+        try {
+            $address = new Address(
+                street: $clientDto->street,
+                city: $clientDto->city,
+                state: $clientDto->state,
+                zip: $clientDto->zip
+            );
+            $ficoScore = new FicoScore($clientDto->ficoScore);
+        } catch (InvalidAddressException $e) {
+            throw new InvalidArgumentException('invalid address');
+        } catch (InvalidFicoScoreException $e) {
+            throw new InvalidArgumentException('invalid FICO score');
+        }
+        try {
+            $dateOfBirth = new \DateTimeImmutable($clientDto->dateOfBirth);
+        } catch (\Exception $e) {
+            throw new InvalidArgumentException('invalid date of birth score');
+        }
+
 
         // Creating new client.
         $client = Client::create(
             id: ClientId::generate(),
             firstName: $clientDto->firstName,
             lastName: $clientDto->lastName,
-            dateOfBirth: new \DateTimeImmutable($clientDto->dateOfBirth),
+            dateOfBirth: $dateOfBirth,
             ssn: $clientDto->ssn,
             address: $address,
             ficoScore: $ficoScore,

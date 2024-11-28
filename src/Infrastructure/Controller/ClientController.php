@@ -39,7 +39,7 @@ class ClientController extends AbstractController
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse([
                 'status' => 'error',
-                'message' => 'Invalid request payload. Please check your input data.',
+                'message' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (ClientAlreadyExistsException $e) {
             return new JsonResponse([

@@ -11,7 +11,7 @@ use App\Domain\Client\ValueObject\Address;
 use App\Domain\Client\ValueObject\ClientId;
 use App\Domain\Client\ValueObject\FicoScore;
 
-readonly class UpdateClientService
+class UpdateClientService
 {
     public function __construct(
         private ClientRepositoryInterface $clientRepository,

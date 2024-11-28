@@ -23,6 +23,8 @@ doctrine:
         identity_generation_preferences:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
         auto_mapping: true
+        controller_resolver:
+            auto_mapping: false
         mappings:
             Client:
                 type: xml
