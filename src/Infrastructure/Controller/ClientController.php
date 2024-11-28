@@ -4,6 +4,7 @@ namespace App\Infrastructure\Controller;
 
 use App\Application\Service\Client\CreateClientService;
 use App\Application\Dto\ClientDto;
+use App\Application\Service\Client\LoanEligibilityClientService;
 use App\Application\Service\Client\UpdateClientService;
 use App\Domain\Client\Exception\ClientAlreadyExistsException;
 use App\Domain\Client\Exception\ClientNotFoundException;
@@ -22,6 +23,7 @@ class ClientController extends AbstractController
     public function __construct(
         private readonly CreateClientService $createClientService,
         private readonly UpdateClientService $updateClientService,
+        private readonly LoanEligibilityClientService $loanEligibilityClientService,
     ) {
     }
 
@@ -32,20 +34,31 @@ class ClientController extends AbstractController
         try {
             $clientId = $this->createClientService->execute($clientDto);
 
-            return new JsonResponse([
+            $response = [
                 'status' => 'success',
                 'client_id' => $clientId,
-            ], Response::HTTP_CREATED);
+            ];
+            $status = Response::HTTP_CREATED;
         } catch (\InvalidArgumentException $e) {
-            return new JsonResponse([
+            $response = [
                 'status' => 'error',
                 'message' => $e->getMessage(),
-            ], Response::HTTP_BAD_REQUEST);
+            ];
+            $status = Response::HTTP_BAD_REQUEST;
         } catch (ClientAlreadyExistsException $e) {
-            return new JsonResponse([
+            $response = [
                 'status' => 'error',
                 'message' => 'A client with this email or SSN already exists.',
-            ], Response::HTTP_CONFLICT);
+            ];
+            $status = Response::HTTP_CONFLICT;
+        } catch (\Throwable $e) {
+            $response = [
+                'status' => 'error',
+                'message' => 'Internal error.',
+            ];
+            $status = Response::HTTP_INTERNAL_SERVER_ERROR;
+        } finally {
+            return new JsonResponse($response, $status);
         }
     }
 
@@ -58,26 +71,71 @@ class ClientController extends AbstractController
             $clientId = $this->updateClientService->execute(
                 $clientDto->setId($id),
             );
-
-            return new JsonResponse([
+            $response = [
                 'status' => 'success',
                 'client_id' => $clientId,
-            ], Response::HTTP_OK);
+            ];
+            $status = Response::HTTP_OK;
         } catch (ClientNotFoundException $e) {
-            return new JsonResponse([
+            $response = [
                 'status' => 'error',
-                'message' => 'Client not found.',
-            ], Response::HTTP_NOT_FOUND);
+                'client_id' => 'Client not found.',
+            ];
+            $status = Response::HTTP_NOT_FOUND;
         } catch (\InvalidArgumentException $e) {
-            return new JsonResponse([
+            $response = [
                 'status' => 'error',
-                'message' => 'Invalid request payload. Please check your input data.',
-            ], Response::HTTP_BAD_REQUEST);
+                'client_id' => 'Invalid request payload. Please check your input data.',
+            ];
+            $status = Response::HTTP_BAD_REQUEST;
         } catch (ClientAlreadyExistsException $e) {
-            return new JsonResponse([
+            $response = [
                 'status' => 'error',
-                'message' => 'A client with this email or SSN already exists.',
-            ], Response::HTTP_CONFLICT);
+                'client_id' => 'A client with this email or SSN already exists.',
+            ];
+            $status = Response::HTTP_CONFLICT;
+        } catch (\Throwable $e) {
+            $response = [
+                'status' => 'error',
+                'message' => 'Internal error.',
+            ];
+            $status = Response::HTTP_INTERNAL_SERVER_ERROR;
+        } finally {
+            return new JsonResponse($response, $status);
+        }
+    }
+
+    #[Route('/{uuid}/loan-eligibility', name: 'Check if the current user is eligible for loan', methods: ['GET'], format: 'json')]
+    public function checkClientLoanEligibility(
+        string $uuid,
+    ): JsonResponse {
+        try {
+            $isEligible = $this->loanEligibilityClientService->execute($uuid);
+            $response = [
+                'status' => 'success',
+                'is_eligible' => $isEligible,
+            ];
+            $status = Response::HTTP_OK;
+        } catch (ClientNotFoundException $e) {
+            $response = [
+                'status' => 'error',
+                'client_id' => 'Client not found.',
+            ];
+            $status = Response::HTTP_NOT_FOUND;
+        } catch (\InvalidArgumentException $e) {
+            $response = [
+                'status' => 'error',
+                'client_id' => 'Invalid request payload. Please check your input data.',
+            ];
+            $status = Response::HTTP_BAD_REQUEST;
+        } catch (\Throwable $e) {
+            $response = [
+                'status' => 'error',
+                'message' => 'Internal error.',
+            ];
+            $status = Response::HTTP_INTERNAL_SERVER_ERROR;
+        } finally {
+            return new JsonResponse($response, $status);
         }
     }
 }
