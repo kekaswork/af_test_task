@@ -11,7 +11,7 @@ use App\Domain\Client\Exception\ClientNotFoundException;
 use App\Domain\Client\Repository\ClientRepositoryInterface;
 use App\Domain\Client\ValueObject\ClientId;
 
-class UpdateClientService
+class FullUpdateClientService
 {
     public function __construct(
         private ClientRepositoryInterface $clientRepository,
@@ -33,7 +33,12 @@ class UpdateClientService
         // Validating some request data.
         $this->clientDtoValidator->validateUniqueEmail($clientDto->email, $client);
         $this->clientDtoValidator->validateUniqueSsn($clientDto->ssn, $client);
-        $address = $this->clientDtoValidator->validateAddress($clientDto);
+        $address = $this->clientDtoValidator->validateAddress(
+            street: $clientDto->street,
+            city: $clientDto->city,
+            state: $clientDto->state,
+            zip: $clientDto->zip,
+        );
         $ficoScore = $this->clientDtoValidator->validateFicoScore($clientDto->ficoScore);
         $dateOfBirth = $this->clientDtoValidator->validateDateOfBirth($clientDto->dateOfBirth);
 

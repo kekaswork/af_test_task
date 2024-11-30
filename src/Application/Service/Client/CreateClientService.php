@@ -35,7 +35,12 @@ class CreateClientService
     ): string {
         $this->clientDtoValidator->validateUniqueEmail($clientDto->email);
         $this->clientDtoValidator->validateUniqueSsn($clientDto->ssn);
-        $address = $this->clientDtoValidator->validateAddress($clientDto);
+        $address = $this->clientDtoValidator->validateAddress(
+            street: $clientDto->street,
+            city: $clientDto->city,
+            state: $clientDto->state,
+            zip: $clientDto->zip,
+        );
         $ficoScore = $this->clientDtoValidator->validateFicoScore($clientDto->ficoScore);
         $dateOfBirth = $this->clientDtoValidator->validateDateOfBirth($clientDto->dateOfBirth);
 

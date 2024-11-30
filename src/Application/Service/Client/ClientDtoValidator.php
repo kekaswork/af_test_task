@@ -2,7 +2,6 @@
 
 namespace App\Application\Service\Client;
 
-use App\Application\Dto\ClientDto;
 use App\Domain\Client\Entity\Client;
 use App\Domain\Client\Exception\ClientAlreadyExistsException;
 use App\Domain\Client\Exception\ClientNotFoundException;
@@ -22,21 +21,8 @@ use InvalidArgumentException;
 class ClientDtoValidator
 {
     public function __construct(
-        private ClientRepositoryInterface $clientRepository
+        private ClientRepositoryInterface $clientRepository,
     ) {
-    }
-
-    /**
-     * Validates that a client exists by their ID.
-     *
-     * @param string $clientId
-     * @throws ClientNotFoundException
-     */
-    public function validateClientId(string $clientId): void
-    {
-        if (! $this->clientRepository->findById(ClientId::fromString($clientId))) {
-            throw new ClientNotFoundException('Client not found.');
-        }
     }
 
     /**
@@ -76,18 +62,21 @@ class ClientDtoValidator
     /**
      * Validates and creates an Address object from a ClientDto.
      *
-     * @param ClientDto $clientDto
+     * @param string $street
+     * @param string $city
+     * @param string $state
+     * @param string $zip
+     *
      * @return Address
-     * @throws InvalidArgumentException If the address is invalid.
      */
-    public function validateAddress(ClientDto $clientDto): Address
+    public function validateAddress(string $street, string $city, string $state, string $zip): Address
     {
         try {
             return new Address(
-                street: $clientDto->street,
-                city: $clientDto->city,
-                state: $clientDto->state,
-                zip: $clientDto->zip,
+                street: $street,
+                city: $city,
+                state: $state,
+                zip: $zip,
             );
         } catch (InvalidAddressException $e) {
             throw new InvalidArgumentException('Invalid address.');

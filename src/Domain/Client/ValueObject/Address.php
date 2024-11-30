@@ -31,7 +31,6 @@ class Address
 
     private function validateZip(string $zip): void
     {
-        // Регулярное выражение для проверки ZIP-кода (5 или 9 цифр)
         if (! preg_match('/^\d{5}(-\d{4})?$/', $zip)) {
             throw new InvalidAddressException("Invalid ZIP code provided: $zip");
         }
@@ -111,5 +110,15 @@ class Address
     public function getZip(): string
     {
         return $this->zip;
+    }
+
+    public function equals(self $other): bool
+    {
+        return (
+            $this->street === $other->getStreet() &&
+            $this->city === $other->getCity() &&
+            $this->state === $other->getState() &&
+            $this->zip === $other->getZip()
+        );
     }
 }

@@ -32,4 +32,9 @@ class FicoScore
     {
         return $this->value > $threshold;
     }
+
+    public function equals(self $other): bool
+    {
+        return $this->value === $other->getValue();
+    }
 }

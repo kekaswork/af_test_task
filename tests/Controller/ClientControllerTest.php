@@ -5,7 +5,8 @@ namespace App\Tests\Controller;
 use App\Application\Service\Client\ClientDtoValidator;
 use App\Application\Service\Client\CreateClientService;
 use App\Application\Service\Client\LoanEligibilityClientService;
-use App\Application\Service\Client\UpdateClientService;
+use App\Application\Service\Client\FullUpdateClientService;
+use App\Application\Service\Client\PartialUpdateClientService;
 use App\Domain\Client\Repository\ClientRepositoryInterface;
 use App\Domain\Client\ValueObject\ClientId;
 use App\Infrastructure\Controller\ClientController;
@@ -19,7 +20,8 @@ class ClientControllerTest extends WebTestCase
 
     private static ClientRepositoryInterface $clientRepository;
     private CreateClientService $createClientService;
-    private UpdateClientService $updateClientService;
+    private FullUpdateClientService $fullUpdateClientService;
+    private PartialUpdateClientService $partialUpdateClientService;
     private LoanEligibilityClientService $loanEligibilityClientService;
     private ClientController $controller;
     private static string $addedClientId = '';
@@ -32,12 +34,16 @@ class ClientControllerTest extends WebTestCase
         }
         $clientDtoValidator = new ClientDtoValidator(self::$clientRepository);
         $this->createClientService = new CreateClientService(self::$clientRepository, $clientDtoValidator);
-        $this->updateClientService = new UpdateClientService(self::$clientRepository, $clientDtoValidator);
+        $this->fullUpdateClientService = new FullUpdateClientService(self::$clientRepository, $clientDtoValidator);
+        $this->partialUpdateClientService = new PartialUpdateClientService(
+            self::$clientRepository, $clientDtoValidator
+        );
         $this->loanEligibilityClientService = new LoanEligibilityClientService(self::$clientRepository);
         $this->controller = new ClientController(
             $this->createClientService,
-            $this->updateClientService,
-            $this->loanEligibilityClientService
+            $this->fullUpdateClientService,
+            $this->partialUpdateClientService,
+            $this->loanEligibilityClientService,
         );
     }
 
@@ -196,13 +202,63 @@ class ClientControllerTest extends WebTestCase
         $this->assertEquals(RESPONSE::HTTP_CONFLICT, $response->getStatusCode());
     }
 
-    public function testUpdateClientWithExistingSsn()
+    public function testUpdateClientWithExistingSsn(): void
     {
         $payload = $this->getClientRequestPayload();
         $payload['ssn'] = self::$secondClient['ssn'];
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PUT');
         $this->assertEquals(RESPONSE::HTTP_CONFLICT, $response->getStatusCode());
     }
+
+    public function partialUpdateClientSuccess(): void
+    {
+        $payload = [
+            'first_name' => 'Almaz',
+        ];
+        $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PATCH');
+        $this->assertEquals(RESPONSE::HTTP_OK, $response->getStatusCode());
+    }
+
+    public function partialUpdateNonExistingClient(): void
+    {
+        $randomClientId = ClientId::generate();
+        $response = $this->performRequest('/api/clients/' . $randomClientId, [], 'PATCH');
+        $this->assertEquals(RESPONSE::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    public function partialClientUpdateWithEmptyData(): void
+    {
+        $response = $this->performRequest('/api/clients/' . self::$addedClientId, [], 'PATCH');
+        $this->assertEquals(RESPONSE::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+    }
+
+    public function partialClientUpdateWithInvalidData(): void
+    {
+        $payload = [
+            'email' => 'invalid email',
+        ];
+        $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PATCH');
+        $this->assertEquals(RESPONSE::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+    }
+
+    public function partialClientUpdateWithDuplicatedEmail(): void
+    {
+        $payload = [
+            'email' => self::$secondClient['email'],
+        ];
+        $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PATCH');
+        $this->assertEquals(RESPONSE::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+    }
+
+    public function partialClientUpdateWithDuplicatedSsn(): void
+    {
+        $payload = [
+            'ssn' => self::$secondClient['ssn'],
+        ];
+        $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PATCH');
+        $this->assertEquals(RESPONSE::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+    }
+
 
     public function performRequest(string $uri, array $payload, string $method = 'POST'): Response
     {
