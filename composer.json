@@ -89,7 +89,8 @@
             "@auto-scripts"
         ],
         "phpcs-check": "vendor/bin/phpcs src/ tests/",
-        "phpcs-fix": "vendor/bin/phpcbf src/ tests/"
+        "phpcs-fix": "vendor/bin/phpcbf src/ tests/",
+        "tests-run": "php bin/phpunit"
     },
     "conflict": {
         "symfony/symfony": "*"

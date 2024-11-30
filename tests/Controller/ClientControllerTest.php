@@ -7,22 +7,23 @@ use App\Application\Service\Client\CreateClientService;
 use App\Application\Service\Client\LoanEligibilityClientService;
 use App\Application\Service\Client\UpdateClientService;
 use App\Domain\Client\Repository\ClientRepositoryInterface;
-use App\Domain\Client\ValueObject\AggregateRootId;
 use App\Domain\Client\ValueObject\ClientId;
 use App\Infrastructure\Controller\ClientController;
-use App\Infrastructure\Doctrine\Types\AggregateRootType;
 use App\Tests\Mock\Repository\MockClientRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 class ClientControllerTest extends WebTestCase
 {
+    private const UUID_PATTERN = '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i';
+
     private static ClientRepositoryInterface $clientRepository;
     private CreateClientService $createClientService;
     private UpdateClientService $updateClientService;
     private LoanEligibilityClientService $loanEligibilityClientService;
     private ClientController $controller;
     private static string $addedClientId = '';
+    private static array $secondClient = [];
 
     protected function setUp(): void
     {
@@ -33,7 +34,11 @@ class ClientControllerTest extends WebTestCase
         $this->createClientService = new CreateClientService(self::$clientRepository, $clientDtoValidator);
         $this->updateClientService = new UpdateClientService(self::$clientRepository, $clientDtoValidator);
         $this->loanEligibilityClientService = new LoanEligibilityClientService(self::$clientRepository);
-        $this->controller = new ClientController($this->createClientService, $this->updateClientService, $this->loanEligibilityClientService);
+        $this->controller = new ClientController(
+            $this->createClientService,
+            $this->updateClientService,
+            $this->loanEligibilityClientService
+        );
     }
 
     public function testCreateClientSuccess()
@@ -51,7 +56,7 @@ class ClientControllerTest extends WebTestCase
 
         // Assert that 'client_id' matches the UUID pattern
         $this->assertMatchesRegularExpression(
-            '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i',
+            self::UUID_PATTERN,
             $responseData['client_id']
         );
 
@@ -61,7 +66,7 @@ class ClientControllerTest extends WebTestCase
     public function testCreateClientWithExistingEmail()
     {
         $payload = $this->getClientRequestPayload();
-        $payload['ssn'] = '143-46-6222';
+        $payload['ssn'] = self::generateRandomSsn();
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_CONFLICT, $response->getStatusCode());
     }
@@ -69,7 +74,7 @@ class ClientControllerTest extends WebTestCase
     public function testCreateClientWithExistingSsn()
     {
         $payload = $this->getClientRequestPayload();
-        $payload['email'] = 'unique' . $payload['email'];
+        $payload['email'] = self::generateRandomEmail();
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_CONFLICT, $response->getStatusCode());
     }
@@ -142,8 +147,8 @@ class ClientControllerTest extends WebTestCase
     public function testCreateSecondClientSuccess()
     {
         $payload = $this->getClientRequestPayload();
-        $payload['email'] = 'unique.' . $payload['email'];
-        $payload['ssn'] = '143-46-6222';
+        $payload['email'] = self::generateRandomEmail();
+        $payload['ssn'] = self::generateRandomSsn();
 
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(RESPONSE::HTTP_CREATED, $response->getStatusCode());
@@ -158,12 +163,14 @@ class ClientControllerTest extends WebTestCase
 
         // Assert that 'client_id' matches the UUID pattern
         $this->assertMatchesRegularExpression(
-            '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i',
-            $responseData['client_id']
+            self::UUID_PATTERN,
+            $responseData['client_id'],
         );
+
+        self::$secondClient = $payload;
     }
 
-    public function testUpdateClientSuccess()
+    public function testUpdateExistingClientSuccess()
     {
         $payload = $this->getClientRequestPayload();
         $payload['first_name'] = 'Mr. ' . $payload['first_name'];
@@ -171,18 +178,20 @@ class ClientControllerTest extends WebTestCase
         $this->assertEquals(RESPONSE::HTTP_OK, $response->getStatusCode());
     }
 
-    public function testUpdateNonExistingClient()
+    public function testUpdateNonExistingClientSuccess()
     {
         $payload = $this->getClientRequestPayload();
+        $payload['email'] = self::generateRandomEmail();
+        $payload['ssn'] = self::generateRandomSsn();
         $randomClientId = ClientId::generate();
         $response = $this->performRequest('/api/clients/' . $randomClientId->getValue(), $payload, 'PUT');
-        $this->assertEquals(RESPONSE::HTTP_NOT_FOUND, $response->getStatusCode());
+        $this->assertEquals(RESPONSE::HTTP_CREATED, $response->getStatusCode());
     }
 
     public function testUpdateClientWithExistingEmail()
     {
         $payload = $this->getClientRequestPayload();
-        $payload['email'] = 'unique.' . $payload['email'];
+        $payload['email'] = self::$secondClient['email'];
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PUT');
         $this->assertEquals(RESPONSE::HTTP_CONFLICT, $response->getStatusCode());
     }
@@ -190,7 +199,7 @@ class ClientControllerTest extends WebTestCase
     public function testUpdateClientWithExistingSsn()
     {
         $payload = $this->getClientRequestPayload();
-        $payload['ssn'] = '143-46-6222';
+        $payload['ssn'] = self::$secondClient['ssn'];
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PUT');
         $this->assertEquals(RESPONSE::HTTP_CONFLICT, $response->getStatusCode());
     }
@@ -236,5 +245,19 @@ class ClientControllerTest extends WebTestCase
     public static function tearDownAfterClass(): void
     {
         MockClientRepository::clear();
+    }
+
+    public static function generateRandomEmail(string $domain = 'example.com'): string
+    {
+        $uniqueString = bin2hex(random_bytes(4));
+        return "user-{$uniqueString}@$domain";
+    }
+
+    public static function generateRandomSsn(): string
+    {
+        $area = str_pad((string)random_int(100, 999), 3, '0', STR_PAD_LEFT);
+        $group = str_pad((string)random_int(10, 99), 2, '0', STR_PAD_LEFT);
+        $serial = str_pad((string)random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
+        return "$area-$group-$serial";
     }
 }

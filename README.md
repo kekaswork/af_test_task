@@ -15,7 +15,7 @@
  5. Поднимите инфраструктуру с помощью Docker: ```docker compose up -d```
 
 ## Полезные команды:
- - Запуск тестов: ```php bin/phpunit```
+ - Запуск тестов: ```composer tests-run```
  - Проверка кода phpcs: ```composer phpcs-check```
  - Автоматическое исправление кода phpcs: ```composer phpcs-fix```
 

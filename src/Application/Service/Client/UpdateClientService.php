@@ -3,6 +3,9 @@
 namespace App\Application\Service\Client;
 
 use App\Application\Dto\ClientDto;
+use App\Application\Dto\ClientFullUpdateResultDto;
+use App\Domain\Client\Entity\Client;
+use App\Domain\Client\Enum\ClientOperationType;
 use App\Domain\Client\Exception\ClientAlreadyExistsException;
 use App\Domain\Client\Exception\ClientNotFoundException;
 use App\Domain\Client\Repository\ClientRepositoryInterface;
@@ -22,26 +25,48 @@ class UpdateClientService
      */
     public function execute(
         ClientDto $clientDto,
-    ): string {
+    ): ClientFullUpdateResultDto {
         // Validating ID
         $clientId = ClientId::fromString($clientDto->getId());
-
-        $client = $this->clientDtoValidator->validateClientExistence($clientId);
+        // Trying to find client by the provided ID
+        $client = $this->clientRepository->findById($clientId);
+        // Validating some request data.
         $this->clientDtoValidator->validateUniqueEmail($clientDto->email, $client);
         $this->clientDtoValidator->validateUniqueSsn($clientDto->ssn, $client);
         $address = $this->clientDtoValidator->validateAddress($clientDto);
         $ficoScore = $this->clientDtoValidator->validateFicoScore($clientDto->ficoScore);
         $dateOfBirth = $this->clientDtoValidator->validateDateOfBirth($clientDto->dateOfBirth);
 
-        $client->setFirstName($clientDto->firstName)->setLastName($clientDto->lastName)->setDateOfBirth(
-            $dateOfBirth
-        )->setSsn($clientDto->ssn)->setAddress($address)->setFicoScore($ficoScore)->setEmail(
-            $clientDto->email
-        )->setPhone($clientDto->phone)->setMonthlyIncome($clientDto->monthlyIncome)->setupdatedAt(
-            new \DateTimeImmutable('now')
-        );
+        if ($client instanceof Client) {
+            // If there is a client with such ID, we should update it.
+            $client
+                ->setFirstName($clientDto->firstName)
+                ->setLastName($clientDto->lastName)
+                ->setDateOfBirth($dateOfBirth)
+                ->setSsn($clientDto->ssn)
+                ->setAddress($address)
+                ->setFicoScore($ficoScore)
+                ->setEmail($clientDto->email)
+                ->setPhone($clientDto->phone)
+                ->setMonthlyIncome($clientDto->monthlyIncome)
+                ->setupdatedAt(new \DateTimeImmutable('now'));
+            return new ClientFullUpdateResultDto($this->clientRepository->update($client)->getId()->getValue(), ClientOperationType::UPDATED);
+        }
 
-        // Save the client in the repository
-        return $this->clientRepository->update($client)->getId()->getValue();
+        // If the passed ID value is not associated with any records from the clients table,
+        // we should create a new record with such ID.
+        $client = Client::create(
+            id: $clientId,
+            firstName: $clientDto->firstName,
+            lastName: $clientDto->lastName,
+            dateOfBirth: $dateOfBirth,
+            ssn: $clientDto->ssn,
+            address: $address,
+            ficoScore: $ficoScore,
+            email: $clientDto->email,
+            phone: $clientDto->phone,
+            monthlyIncome: $clientDto->monthlyIncome,
+        );
+        return new ClientFullUpdateResultDto($this->clientRepository->save($client)->getId()->getValue(), ClientOperationType::CREATED);
     }
 }

@@ -6,6 +6,7 @@ use App\Application\Service\Client\CreateClientService;
 use App\Application\Dto\ClientDto;
 use App\Application\Service\Client\LoanEligibilityClientService;
 use App\Application\Service\Client\UpdateClientService;
+use App\Domain\Client\Enum\ClientOperationType;
 use App\Domain\Client\Exception\ClientAlreadyExistsException;
 use App\Domain\Client\Exception\ClientNotFoundException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -62,20 +63,23 @@ class ClientController extends AbstractController
         }
     }
 
-    #[Route('/{id}', name: 'Update client data by client ID', methods: ['PUT'], format: 'json')]
+    #[Route('/{id}', name: 'Full update by client ID', methods: ['PUT'], format: 'json')]
     public function updateClient(
         string $id,
         #[MapRequestPayload] ClientDto $clientDto,
     ): JsonResponse {
         try {
-            $clientId = $this->updateClientService->execute(
+            $result = $this->updateClientService->execute(
                 $clientDto->setId($id),
             );
             $response = [
                 'status' => 'success',
-                'client_id' => $clientId,
+                'client_id' => $result->getId(),
             ];
-            $status = Response::HTTP_OK;
+            $status = match ($result->getOperation()) {
+                ClientOperationType::UPDATED => Response::HTTP_OK,
+                ClientOperationType::CREATED => Response::HTTP_CREATED,
+            };
         } catch (ClientNotFoundException $e) {
             $response = [
                 'status' => 'error',
