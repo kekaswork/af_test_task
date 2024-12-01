@@ -19,10 +19,6 @@ class ClientControllerTest extends WebTestCase
     private const UUID_PATTERN = '/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i';
 
     private static ClientRepositoryInterface $clientRepository;
-    private CreateClientService $createClientService;
-    private FullUpdateClientService $fullUpdateClientService;
-    private PartialUpdateClientService $partialUpdateClientService;
-    private LoanEligibilityClientService $loanEligibilityClientService;
     private ClientController $controller;
     private static string $addedClientId = '';
     private static array $secondClient = [];
@@ -33,23 +29,24 @@ class ClientControllerTest extends WebTestCase
             self::$clientRepository = new MockClientRepository();
         }
         $clientDtoValidator = new ClientDtoValidator(self::$clientRepository);
-        $this->createClientService = new CreateClientService(self::$clientRepository, $clientDtoValidator);
-        $this->fullUpdateClientService = new FullUpdateClientService(self::$clientRepository, $clientDtoValidator);
-        $this->partialUpdateClientService = new PartialUpdateClientService(
-            self::$clientRepository, $clientDtoValidator
+        $createClientService = new CreateClientService(self::$clientRepository, $clientDtoValidator);
+        $fullUpdateClientService = new FullUpdateClientService(self::$clientRepository, $clientDtoValidator);
+        $partialUpdateClientService = new PartialUpdateClientService(
+            self::$clientRepository,
+            $clientDtoValidator
         );
-        $this->loanEligibilityClientService = new LoanEligibilityClientService(self::$clientRepository);
+        $loanEligibilityClientService = new LoanEligibilityClientService(self::$clientRepository);
         $this->controller = new ClientController(
-            $this->createClientService,
-            $this->fullUpdateClientService,
-            $this->partialUpdateClientService,
-            $this->loanEligibilityClientService,
+            $createClientService,
+            $fullUpdateClientService,
+            $partialUpdateClientService,
+            $loanEligibilityClientService,
         );
     }
 
     public function testCreateClientSuccess()
     {
-        $response = $this->performRequest('/api/clients', $this->getClientRequestPayload());
+        $response = $this->performRequest('/api/clients', self::getEligibleClientRequestPayload());
         $this->assertEquals(RESPONSE::HTTP_CREATED, $response->getStatusCode());
 
         $responseData = json_decode($response->getContent(), true);
@@ -71,7 +68,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithExistingEmail()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['ssn'] = self::generateRandomSsn();
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_CONFLICT, $response->getStatusCode());
@@ -79,7 +76,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithExistingSsn()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['email'] = self::generateRandomEmail();
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_CONFLICT, $response->getStatusCode());
@@ -87,7 +84,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithInvalidEmail()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['email'] = 'invalidemail';
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
@@ -95,7 +92,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithInvalidSsn()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['ssn'] = 'invalidssn';
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
@@ -103,7 +100,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithInvalidState()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['state'] = 'unexisting state';
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
@@ -111,7 +108,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithInvalidZipCode()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['zip'] = '11111111';
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
@@ -119,7 +116,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithInvalidPhone()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['phone'] = 123123123;
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
@@ -127,7 +124,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithInvalidFicoScore()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['fico_score'] = -900;
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
@@ -135,7 +132,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithNoRequiredField()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $randomKey = array_rand($payload);
         unset($payload[$randomKey]);
         $response = $this->performRequest('/api/clients', $payload);
@@ -144,7 +141,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithInvalidDateOfBirth()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['date_of_birth'] = 'invaliddateofbirth';
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
@@ -152,9 +149,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateSecondClientSuccess()
     {
-        $payload = $this->getClientRequestPayload();
-        $payload['email'] = self::generateRandomEmail();
-        $payload['ssn'] = self::generateRandomSsn();
+        $payload = self::getNonEligibleClientRequestPayload();
 
         $response = $this->performRequest('/api/clients', $payload);
         $this->assertEquals(RESPONSE::HTTP_CREATED, $response->getStatusCode());
@@ -173,12 +168,12 @@ class ClientControllerTest extends WebTestCase
             $responseData['client_id'],
         );
 
-        self::$secondClient = $payload;
+        self::$secondClient = array_merge($payload, ['id' => $responseData['client_id']]);
     }
 
     public function testUpdateExistingClientSuccess()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['first_name'] = 'Mr. ' . $payload['first_name'];
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PUT');
         $this->assertEquals(RESPONSE::HTTP_OK, $response->getStatusCode());
@@ -186,7 +181,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testUpdateNonExistingClientSuccess()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['email'] = self::generateRandomEmail();
         $payload['ssn'] = self::generateRandomSsn();
         $randomClientId = ClientId::generate();
@@ -196,7 +191,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testUpdateClientWithExistingEmail()
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['email'] = self::$secondClient['email'];
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PUT');
         $this->assertEquals(RESPONSE::HTTP_CONFLICT, $response->getStatusCode());
@@ -204,13 +199,13 @@ class ClientControllerTest extends WebTestCase
 
     public function testUpdateClientWithExistingSsn(): void
     {
-        $payload = $this->getClientRequestPayload();
+        $payload = self::getEligibleClientRequestPayload();
         $payload['ssn'] = self::$secondClient['ssn'];
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PUT');
         $this->assertEquals(RESPONSE::HTTP_CONFLICT, $response->getStatusCode());
     }
 
-    public function partialUpdateClientSuccess(): void
+    public function testPartialUpdateClientSuccess(): void
     {
         $payload = [
             'first_name' => 'Almaz',
@@ -219,20 +214,23 @@ class ClientControllerTest extends WebTestCase
         $this->assertEquals(RESPONSE::HTTP_OK, $response->getStatusCode());
     }
 
-    public function partialUpdateNonExistingClient(): void
+    public function testPartialUpdateNonExistingClient(): void
     {
+        $payload = [
+            'first_name' => 'almaz',
+        ];
         $randomClientId = ClientId::generate();
-        $response = $this->performRequest('/api/clients/' . $randomClientId, [], 'PATCH');
+        $response = $this->performRequest('/api/clients/' . $randomClientId, $payload, 'PATCH');
         $this->assertEquals(RESPONSE::HTTP_NOT_FOUND, $response->getStatusCode());
     }
 
-    public function partialClientUpdateWithEmptyData(): void
+    public function testPartialClientUpdateWithEmptyData(): void
     {
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, [], 'PATCH');
-        $this->assertEquals(RESPONSE::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+        $this->assertEquals(RESPONSE::HTTP_BAD_REQUEST, $response->getStatusCode());
     }
 
-    public function partialClientUpdateWithInvalidData(): void
+    public function testPartialClientUpdateWithInvalidData(): void
     {
         $payload = [
             'email' => 'invalid email',
@@ -241,24 +239,43 @@ class ClientControllerTest extends WebTestCase
         $this->assertEquals(RESPONSE::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
     }
 
-    public function partialClientUpdateWithDuplicatedEmail(): void
+    public function testPartialClientUpdateWithDuplicatedEmail(): void
     {
         $payload = [
             'email' => self::$secondClient['email'],
         ];
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PATCH');
-        $this->assertEquals(RESPONSE::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+        $this->assertEquals(RESPONSE::HTTP_CONFLICT, $response->getStatusCode());
     }
 
-    public function partialClientUpdateWithDuplicatedSsn(): void
+    public function testPartialClientUpdateWithDuplicatedSsn(): void
     {
         $payload = [
             'ssn' => self::$secondClient['ssn'],
         ];
         $response = $this->performRequest('/api/clients/' . self::$addedClientId, $payload, 'PATCH');
-        $this->assertEquals(RESPONSE::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+        $this->assertEquals(RESPONSE::HTTP_CONFLICT, $response->getStatusCode());
     }
 
+    public function testCheckEligibilityTrue(): void
+    {
+        $response = $this->performRequest(sprintf('/api/clients/%s/loan-eligibility', self::$addedClientId), [], 'GET');
+        $this->assertEquals(RESPONSE::HTTP_OK, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('is_eligible', $responseData);
+        $this->assertIsBool($responseData['is_eligible']);
+        $this->assertTrue($responseData['is_eligible']);
+    }
+
+    public function testCheckEligibilityFalse(): void
+    {
+        $response = $this->performRequest(sprintf('/api/clients/%s/loan-eligibility', self::$secondClient['id']), [], 'GET');
+        $this->assertEquals(RESPONSE::HTTP_OK, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('is_eligible', $responseData);
+        $this->assertIsBool($responseData['is_eligible']);
+        $this->assertFalse($responseData['is_eligible']);
+    }
 
     public function performRequest(string $uri, array $payload, string $method = 'POST'): Response
     {
@@ -280,7 +297,7 @@ class ClientControllerTest extends WebTestCase
         return $client->getResponse();
     }
 
-    public function getClientRequestPayload(): array
+    public static function getEligibleClientRequestPayload(): array
     {
         return [
             "first_name" => "Almaz",
@@ -293,7 +310,25 @@ class ClientControllerTest extends WebTestCase
             "email" => "almaz@gmail.com",
             "phone" => "+11234567890",
             "monthly_income" => 4000,
-            "fico_score" => 300,
+            "fico_score" => 800,
+            "date_of_birth" => "1993-08-08",
+        ];
+    }
+
+    public static function getNonEligibleClientRequestPayload(): array
+    {
+        return [
+            "first_name" => "Almaz",
+            "last_name" => "G",
+            "ssn" => "243-46-6221",
+            "street" => "1 King Street",
+            "city" => "Los Angeles",
+            "state" => "TX",
+            "zip" => "90001",
+            "email" => "almaz.new@gmail.com",
+            "phone" => "+11234567890",
+            "monthly_income" => 4000,
+            "fico_score" => 800,
             "date_of_birth" => "1993-08-08",
         ];
     }
